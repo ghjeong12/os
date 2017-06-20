@@ -29,7 +29,8 @@ test_alarm_priority (void)
       int priority = PRI_DEFAULT - (i + 5) % 10 - 1;
       char name[16];
       snprintf (name, sizeof name, "priority %d", priority);
-      thread_create (name, priority, alarm_priority_thread, NULL);
+			//printf("thread_create with priority %d with current prio %d\n", priority, thread_current()->priority);
+			thread_create (name, priority, alarm_priority_thread, NULL);
     }
 
   thread_set_priority (PRI_MIN);
@@ -46,6 +47,9 @@ alarm_priority_thread (void *aux UNUSED)
   while (timer_elapsed (start_time) == 0)
     continue;
 
+	/* Added by GJ */
+	struct thread *t = thread_current();
+	//msg ("Current prio %d sleeps",t->priority);
   /* Now we know we're at the very beginning of a timer tick, so
      we can call timer_sleep() without worrying about races
      between checking the time and a timer interrupt. */

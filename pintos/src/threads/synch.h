@@ -4,6 +4,9 @@
 #include <list.h>
 #include <stdbool.h>
 
+//bool //Added by GJ
+//prio_less_func(const struct list_elem* fst, const struct list_elem* snd, void* aux)
+//{};
 /* A counting semaphore. */
 struct semaphore 
   {

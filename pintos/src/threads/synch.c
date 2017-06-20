@@ -49,8 +49,21 @@ sema_init (struct semaphore *sema, unsigned value)
   sema->value = value;
   list_init (&sema->waiters);
 }
+//Added by GJ
+bool
+prio_less_func(const struct list_elem* fst, const struct list_elem* snd, void* aux UNUSED)
+{
+	const struct thread* f = list_entry(fst, struct thread, elem);
+	const struct thread* s = list_entry(snd, struct thread, elem);
 
-/* Down or "P" operation on a semaphore.  Waits for SEMA's value
+	if(f->priority > s->priority)
+		return true;
+	else
+		return false;
+}
+
+
+	/* Down or "P" operation on a semaphore.  Waits for SEMA's value
    to become positive and then atomically decrements it.
 
    This function may sleep, so it must not be called within an
@@ -69,7 +82,9 @@ sema_down (struct semaphore *sema)
   while (sema->value == 0) 
     {
       list_push_back (&sema->waiters, &thread_current ()->elem);
-      thread_block ();
+     	//Added by GJ	
+			//list_insert_ordered(& (sema->waiters), &thread_current() -> elem, prio_less_func, NULL);
+			thread_block ();
     }
   sema->value--;
   intr_set_level (old_level);

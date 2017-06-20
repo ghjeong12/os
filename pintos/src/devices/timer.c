@@ -111,14 +111,14 @@ sleep_less_func(const struct list_elem* fst, const struct list_elem* snd, void* 
 
 	if (f->time_wake < s->time_wake)
 		return true;
-	/*
+	
 	else if(f->time_wake == s->time_wake)
 	{
-		if(f->priority < s-> priority)
+		if(f->priority > s-> priority)
 			return true;
 		else
 			return false;
-	}*/
+	}
 	
 	else
 		return false;
@@ -148,7 +148,10 @@ void
 timer_wake (void)
 {
 	struct thread* trd;
-	
+
+	enum intr_level old_level;
+	old_level = intr_disable();
+
 	while(!list_empty(&sleep_threads))
 	{
 		trd = list_entry(list_front (&sleep_threads), struct thread, elem);
@@ -157,11 +160,15 @@ timer_wake (void)
 		{
 			list_pop_front (&sleep_threads);
 			thread_unblock(trd);
+			//if(trd->priority > thread_current()->priority)
+			//	thread_yield();
 
 		}
 		else
 			break;
 	}
+
+	intr_set_level(old_level);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be

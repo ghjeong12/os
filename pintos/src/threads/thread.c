@@ -71,6 +71,9 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
+/* Added by GJ */
+bool pri_less_func(const struct list_elem* fst, const struct list_elem* snd, void* aux UNUSED);
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -204,12 +207,20 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
-  intr_set_level (old_level);
+  //intr_set_level (old_level);
 
   /* Add to run queue. */
   thread_unblock (t);
+	//printf("!!! thread with %d is created\n", priority);
+	/* Added by GJ	*/
+	if(priority > thread_get_priority())
+	{
+		thread_yield();
+	}
+  
+	intr_set_level (old_level); // Added by GJ
 
-  return tid;
+	return tid;
 }
 
 /* Puts the current thread to sleep.  It will not be scheduled
@@ -245,7 +256,8 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t->elem, pri_less_func, NULL); // Added by GJ
+	//list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -304,8 +316,39 @@ thread_exit (void)
   NOT_REACHED ();
 }
 
+/* 	Added by GJ	
+ 		ready_list should be ordered in descending order	*/
+bool
+pri_less_func(const struct list_elem* fst, const struct list_elem* snd, void* aux UNUSED)
+{
+	const struct thread* f = list_entry(fst, struct thread, elem);
+	const struct thread* s = list_entry(snd, struct thread, elem);
+
+	if(f->priority > s->priority)
+		return true;
+	else
+		return false;
+}
+
+void
+thread_yield (void) 
+{
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  
+  ASSERT (!intr_context ());
+
+  old_level = intr_disable ();
+  if (cur != idle_thread) 
+    list_insert_ordered (&ready_list, &cur->elem, pri_less_func, NULL);
+  cur->status = THREAD_READY;
+  schedule ();
+  intr_set_level (old_level);
+}
+
 /* Yields the CPU.  The current thread is not put to sleep and
    may be scheduled again immediately at the scheduler's whim. */
+/*
 void
 thread_yield (void) 
 {
@@ -321,6 +364,7 @@ thread_yield (void)
   schedule ();
   intr_set_level (old_level);
 }
+*/
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
    This function must be called with interrupts off. */
@@ -343,7 +387,20 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+	//Added by GJ
+	int cur_pri = thread_current() -> priority;
+
   thread_current ()->priority = new_priority;
+
+	//Added by GJ
+	/*if(!list_empty(&ready_list))
+	{
+		const struct thread* f = list_entry(&(&ready_list)->head, struct thread, elem);
+		if(new_priority < f->priority)
+			thread_yield();
+	}*/
+	if (new_priority < cur_pri)
+		thread_yield();
 }
 
 /* Returns the current thread's priority. */
