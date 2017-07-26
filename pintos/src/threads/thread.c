@@ -24,6 +24,10 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
+/* Added by GJ
+	 List of locks acquired by the current thread. */
+//static struct list acquired_lock_list;
+
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -390,7 +394,16 @@ thread_set_priority (int new_priority)
 	//Added by GJ
 	int cur_pri = thread_current() -> priority;
 
-  thread_current ()->priority = new_priority;
+	if(cur_pri != thread_current()->original_priority) // GJ : means it was donated
+	{
+		thread_current()->original_priority = new_priority;
+	}
+	else
+	{
+  	thread_current ()->priority = new_priority;
+		thread_current ()->original_priority = new_priority;
+	}
+	//thread_current ()->saved_priority = new_priority; // Added by GJ
 
 	//Added by GJ
 	/*if(!list_empty(&ready_list))
@@ -399,7 +412,7 @@ thread_set_priority (int new_priority)
 		if(new_priority < f->priority)
 			thread_yield();
 	}*/
-	if (new_priority < cur_pri)
+	if (thread_current()->priority < cur_pri)
 		thread_yield();
 }
 
@@ -525,8 +538,11 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
-  t->magic = THREAD_MAGIC;
+	t->original_priority= priority; // Added by GJ
+  list_init(& t->acquired_lock_list); // Added by GJ
+	t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

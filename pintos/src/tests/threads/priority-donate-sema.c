@@ -72,7 +72,6 @@ static void
 h_thread_func (void *ls_) 
 {
   struct lock_and_sema *ls = ls_;
-
   lock_acquire (&ls->lock);
   msg ("Thread H acquired lock.");
 
