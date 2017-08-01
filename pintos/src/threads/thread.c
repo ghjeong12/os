@@ -540,6 +540,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
 	t->original_priority= priority; // Added by GJ
   list_init(& t->acquired_lock_list); // Added by GJ
+	t->waiting_target_thread = NULL;
 	t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 

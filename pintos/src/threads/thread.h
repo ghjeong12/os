@@ -96,6 +96,8 @@ struct thread
 		int64_t time_wake;
 		int original_priority;
 		int donation_depth;
+		struct thread* waiting_target_thread;
+		int nice;		/* Added by GJ */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
