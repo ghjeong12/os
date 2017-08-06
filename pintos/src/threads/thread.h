@@ -97,7 +97,8 @@ struct thread
 		int original_priority;
 		int donation_depth;
 		struct thread* waiting_target_thread;
-		int nice;		/* Added by GJ */
+		int nice;
+		int recent_cpu;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -115,6 +116,7 @@ struct thread
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
+int load_avg; //Added by GJ
 
 void thread_init (void);
 void thread_start (void);
